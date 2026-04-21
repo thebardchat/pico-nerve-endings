@@ -1,44 +1,74 @@
-# firmware/main.py — Pico 2 Temperature Sensor
-# ⚠️  PLACEHOLDER — firmware lives on the physical pico2-closet device.
-#
-# To extract:
-#   1. sudo systemctl stop pico-listener
-#   2. Open Thonny → connect to /dev/pico-temp
-#   3. File browser → copy main.py from Pico to this file
-#   4. sudo systemctl start pico-listener
-#   5. git add firmware/main.py && git commit -m "feat(temp-sensor): extract firmware from pico2-closet"
-#
-# What it does (from observed output in pico-data.json):
-#   - Reads RP2350 onboard temperature sensor
-#   - Sends JSON over USB serial at 115200 baud, newline-terminated
-#   - Format: {"uptime_s": int, "device": "pico2-closet", "temp_f": float, "temp_c": float, "reading": int}
-#
-# MicroPython v1.24+ on RP2350
+"""
+ShaneBrain Pico 2 — Closet Monitor
+===================================
+Reads internal temperature sensor, pulses onboard LED as heartbeat,
+sends JSON data over USB serial every 5 seconds.
+
+Pi 5 listener reads this and feeds it to the Mega Dashboard.
+No accessories needed — just the bare board.
+"""
 
 import machine
-import ujson
-import utime
+import time
+import json
 
-sensor_temp = machine.ADC(4)
-CONVERSION_FACTOR = 3.3 / (65535)
-DEVICE_NAME = "pico2-closet"
+# Onboard LED (GPIO 25 on Pico 2)
+led = machine.Pin("LED", machine.Pin.OUT)
 
-reading = 0
-start_ms = utime.ticks_ms()
+# Internal temperature sensor (ADC channel 4)
+temp_sensor = machine.ADC(4)
+
+# Conversion factor for internal temp sensor
+# RP2350: voltage = raw * 3.3 / 65535, temp = 27 - (voltage - 0.706) / 0.001721
+CONVERSION = 3.3 / 65535
+
+boot_time = time.ticks_ms()
+reading_count = 0
+
+
+def read_temp_f():
+    """Read internal temperature in Fahrenheit."""
+    raw = temp_sensor.read_u16()
+    voltage = raw * CONVERSION
+    temp_c = 27 - (voltage - 0.706) / 0.001721
+    temp_f = temp_c * 9/5 + 32
+    return round(temp_f, 1), round(temp_c, 1)
+
+
+def heartbeat():
+    """Quick LED flash to show we're alive."""
+    led.on()
+    time.sleep_ms(50)
+    led.off()
+
+
+# Startup flash pattern — 3 quick blinks
+for _ in range(3):
+    led.on()
+    time.sleep_ms(100)
+    led.off()
+    time.sleep_ms(100)
+
+print("ShaneBrain Pico 2 online")
 
 while True:
-    raw = sensor_temp.read_u16() * CONVERSION_FACTOR
-    temp_c = 27 - (raw - 0.706) / 0.001721
-    temp_f = temp_c * 9 / 5 + 32
-    uptime_s = utime.ticks_diff(utime.ticks_ms(), start_ms) // 1000
-    reading += 1
+    temp_f, temp_c = read_temp_f()
+    reading_count += 1
+    uptime_s = time.ticks_diff(time.ticks_ms(), boot_time) // 1000
 
-    payload = ujson.dumps({
+    data = {
+        "device": "pico2-closet",
+        "temp_f": temp_f,
+        "temp_c": temp_c,
         "uptime_s": uptime_s,
-        "device": DEVICE_NAME,
-        "temp_f": round(temp_f, 1),
-        "temp_c": round(temp_c, 1),
-        "reading": reading,
-    })
-    print(payload)
-    utime.sleep(5)
+        "reading": reading_count,
+    }
+
+    # Send JSON over USB serial
+    print(json.dumps(data))
+
+    # Heartbeat LED
+    heartbeat()
+
+    # Read every 5 seconds
+    time.sleep(5)
