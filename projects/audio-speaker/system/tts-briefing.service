@@ -1,0 +1,17 @@
+[Unit]
+Description=Morning Chaos Briefing Audio — TTS to Pico 2 Speaker
+After=network-online.target pico-listener.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=shanebrain
+ExecStart=/usr/bin/python3 /mnt/shanebrain-raid/shanebrain-core/morning-chaos-briefing/tts_briefing.py
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=120
+# Exit 1 means Pico not present — don't alert, just log
+SuccessExitStatus=0 1
+
+[Install]
+WantedBy=multi-user.target

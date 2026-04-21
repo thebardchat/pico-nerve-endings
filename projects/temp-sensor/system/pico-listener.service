@@ -1,0 +1,13 @@
+[Unit]
+Description=Pico 2 Serial Listener — closet temperature sensor
+After=network.target
+
+[Service]
+Type=simple
+User=shanebrain
+ExecStart=/usr/bin/python3 /mnt/shanebrain-raid/shanebrain-core/pico-nerve-endings/projects/temp-sensor/host/pico-listener.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

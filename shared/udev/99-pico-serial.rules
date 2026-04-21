@@ -1,0 +1,25 @@
+# /etc/udev/rules.d/99-pico-serial.rules
+# Pins both Pico 2 units to stable /dev/pico-* symlinks by USB serial number.
+# This prevents ttyACM numbering from shifting when both are plugged in.
+#
+# INSTALL:
+#   sudo cp 99-pico-serial.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+#
+# VERIFY:
+#   ls -la /dev/pico-*
+#
+# TO FIND A NEW PICO'S SERIAL:
+#   udevadm info /dev/ttyACM1 | grep ID_SERIAL_SHORT
+
+# pico2-closet — temperature sensor (existing unit)
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="0005", \
+  ATTRS{serial}=="a7b626e34aa62cfe", \
+  SYMLINK+="pico-temp", MODE="0666"
+
+# pico2-audio — morning briefing speaker (new unit)
+# REPLACE <NEW_PICO_SERIAL> with output of:
+#   udevadm info /dev/ttyACM1 | grep ID_SERIAL_SHORT
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="0005", \
+  ATTRS{serial}=="<NEW_PICO_SERIAL>", \
+  SYMLINK+="pico-audio", MODE="0666"

@@ -1,0 +1,11 @@
+[Unit]
+Description=Morning Chaos Briefing Audio Timer
+Requires=tts-briefing.service
+
+[Timer]
+OnCalendar=*-*-* 06:01:00
+AccuracySec=10s
+Persistent=false
+
+[Install]
+WantedBy=timers.target
