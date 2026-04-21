@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Raspberry Pi Pico 2 firmware and host scripts — the peripheral nervous system of ShaneBrain. Self-contained, forkable hardware projects.">
+  <title>pico-nerve-endings — ShaneBrain Hardware</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syncopate:wght@400;700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --void:         #03050c;
+      --deep:         #060910;
+      --surface:      #0b1124;
+      --surface2:     #101828;
+      --border:       #162040;
+      --trace:        #1e3060;
+      --blue:         #00b4d8;
+      --blue-dim:     #0077a8;
+      --blue-glow:    rgba(0, 180, 216, 0.15);
+      --purple:       #7c3aed;
+      --purple-glow:  #a855f7;
+      --purple-dim:   rgba(124, 58, 237, 0.15);
+      --gold:         #c87800;
+      --gold-bright:  #f59e0b;
+      --gold-glow:    rgba(245, 158, 11, 0.25);
+      --text:         #b0c8e0;
+      --text-bright:  #e4efff;
+      --text-dim:     #3d5a78;
+      --font-display: 'Syncopate', sans-serif;
+      --font-mono:    'Share Tech Mono', monospace;
+      --font-body:    'Courier Prime', 'Courier New', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--void);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+
+    /* ── HERO ─────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .hero img {
+      width: 100%;
+      display: block;
+      max-height: 500px;
+      object-fit: cover;
+      object-position: center 30%;
+      opacity: 0.88;
+    }
+
+    /* scanline overlay */
+    .hero .scanlines {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.12) 2px,
+        rgba(0,0,0,0.12) 4px
+      );
+      pointer-events: none;
+    }
+
+    /* bottom vignette */
+    .hero .vignette {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 220px;
+      background: linear-gradient(to bottom, transparent, var(--void));
+      pointer-events: none;
+    }
+
+    .hero-text {
+      position: absolute;
+      bottom: 1.8rem;
+      left: 0; right: 0;
+      text-align: center;
+      z-index: 2;
+      padding: 0 1rem;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.4em;
+      color: var(--gold-bright);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+      opacity: 0.9;
+    }
+
+    .hero-text h1 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(1.3rem, 3.5vw, 2.4rem);
+      color: var(--text-bright);
+      letter-spacing: 0.08em;
+      text-shadow:
+        0 0 30px rgba(0,180,216,0.55),
+        0 0 70px rgba(0,180,216,0.25);
+    }
+
+    .hero-sub {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--blue);
+      letter-spacing: 0.18em;
+      margin-top: 0.5rem;
+      opacity: 0.85;
+    }
+
+    /* ── LAYOUT ───────────────────────────────────────── */
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 4rem 1.5rem 5rem;
+    }
+
+    /* ── STATUS BAR ───────────────────────────────────── */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      border: 1px solid var(--border);
+      padding: 0.75rem 1.2rem;
+      margin-bottom: 3.5rem;
+      background: var(--deep);
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--gold-bright);
+      box-shadow: 0 0 8px var(--gold-bright);
+      animation: blink 2.8s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    .status-dot.blue {
+      background: var(--blue);
+      box-shadow: 0 0 8px var(--blue);
+      animation-delay: 1.4s;
+    }
+
+    @keyframes blink {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .status-item { display: flex; align-items: center; gap: 0.5rem; }
+
+    .status-sep {
+      color: var(--border);
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    /* ── SECTION LABEL ────────────────────────────────── */
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, var(--border), transparent);
+    }
+
+    .section-label span {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      color: var(--blue);
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* ── PROJECT GRID ─────────────────────────────────── */
+    .projects {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 4rem;
+    }
+
+    @media (max-width: 580px) {
+      .projects { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1.8rem 1.6rem 1.6rem;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+      overflow: hidden;
+    }
+
+    /* corner traces — top-left */
+    .card .c-tl,
+    .card .c-br {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      opacity: 0.4;
+      transition: opacity 0.3s, width 0.3s, height 0.3s;
+    }
+
+    .card .c-tl {
+      top: 0; left: 0;
+      border-top: 2px solid var(--blue);
+      border-left: 2px solid var(--blue);
+    }
+
+    .card .c-br {
+      bottom: 0; right: 0;
+      border-bottom: 2px solid var(--blue);
+      border-right: 2px solid var(--blue);
+    }
+
+    .card:hover {
+      border-color: var(--trace);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px var(--trace);
+    }
+
+    .card:hover .c-tl,
+    .card:hover .c-br {
+      opacity: 1;
+      width: 24px;
+      height: 24px;
+    }
+
+    /* sweep glow */
+    .card .sweep {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 30%, var(--blue-glow) 100%);
+      opacity: 0;
+      transition: opacity 0.4s;
+      pointer-events: none;
+    }
+
+    .card:hover .sweep { opacity: 1; }
+
+    .card-number {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      color: var(--text-dim);
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .card-icon {
+      font-size: 1.8rem;
+      margin-bottom: 0.9rem;
+      display: block;
+      filter: drop-shadow(0 0 10px var(--gold-bright));
+      line-height: 1;
+    }
+
+    .card h3 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-bright);
+      letter-spacing: 0.07em;
+      margin-bottom: 0.7rem;
+    }
+
+    .card p {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+      flex: 1;
+      margin-bottom: 1.2rem;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .tag {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      padding: 0.15rem 0.55rem;
+      border: 1px solid var(--trace);
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .tag.live {
+      border-color: var(--blue-dim);
+      color: var(--blue);
+      box-shadow: inset 0 0 8px rgba(0,180,216,0.08);
+    }
+
+    .tag.soon {
+      border-color: var(--gold);
+      color: var(--gold-bright);
+    }
+
+    .card-cta {
+      font-family: var(--font-mono);
+      font-size: 0.67rem;
+      color: var(--blue);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: color 0.2s;
+    }
+
+    .card-cta .arrow {
+      display: inline-block;
+      transition: transform 0.25s;
+    }
+
+    .card:hover .card-cta { color: var(--text-bright); }
+    .card:hover .card-cta .arrow { transform: translateX(5px); }
+
+    /* ── TRACE PULSE ──────────────────────────────────── */
+    .trace-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin: 0 0 3.5rem;
+      height: 24px;
+    }
+
+    .trace-row .node {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--purple-glow);
+      box-shadow: 0 0 10px var(--purple-glow), 0 0 20px rgba(168,85,247,0.3);
+      flex-shrink: 0;
+    }
+
+    .trace-row .line {
+      flex: 1;
+      height: 1px;
+      position: relative;
+      overflow: visible;
+      background: var(--border);
+    }
+
+    .trace-row .pulse {
+      position: absolute;
+      top: -2px;
+      left: 0;
+      width: 40px;
+      height: 5px;
+      background: linear-gradient(to right, transparent, var(--purple-glow), transparent);
+      animation: travel 4s linear infinite;
+      border-radius: 2px;
+    }
+
+    @keyframes travel {
+      0%   { left: -40px; opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { left: 100%; opacity: 0; }
+    }
+
+    /* ── ECOSYSTEM ────────────────────────────────────── */
+    .ecosystem {
+      border: 1px solid var(--border);
+      background: var(--deep);
+      padding: 2rem 1.8rem;
+      position: relative;
+      margin-bottom: 1rem;
+    }
+
+    .ecosystem-badge {
+      position: absolute;
+      top: -0.6rem;
+      left: 1.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.3em;
+      color: var(--purple-glow);
+      background: var(--deep);
+      padding: 0 0.6rem;
+      text-transform: uppercase;
+    }
+
+    .ecosystem-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    @media (max-width: 580px) {
+      .ecosystem-grid { grid-template-columns: 1fr; }
+    }
+
+    .chain {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      line-height: 2.1;
+      color: var(--text-dim);
+    }
+
+    .chain a {
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .chain .c-root { color: var(--blue); }
+    .chain .c-root:hover { color: var(--text-bright); }
+
+    .chain .c-mid  { color: var(--blue-dim); }
+    .chain .c-mid:hover { color: var(--blue); }
+
+    .chain .c-sec  { color: var(--purple); }
+    .chain .c-sec:hover { color: var(--purple-glow); }
+
+    .chain .c-here {
+      color: var(--gold-bright);
+      position: relative;
+    }
+
+    .chain .c-here::after {
+      content: ' ◀ you are here';
+      font-size: 0.55rem;
+      color: var(--text-dim);
+      letter-spacing: 0.15em;
+    }
+
+    .ecosystem-blurb {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+      max-width: 280px;
+    }
+
+    .ecosystem-blurb strong {
+      color: var(--purple-glow);
+      font-weight: normal;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-family: var(--font-mono);
+      font-size: 0.67rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 0.7rem 1.3rem;
+      border: 1px solid var(--purple);
+      color: var(--purple-glow);
+      background: transparent;
+      transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+      margin-top: 1.4rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: var(--purple-dim);
+      color: var(--text-bright);
+      box-shadow: 0 0 24px rgba(124,58,237,0.2);
+    }
+
+    /* ── FOOTER ───────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+
+    .footer-links {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .footer-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--blue); }
+
+    .footer-links .sep { margin: 0 0.8rem; color: var(--border); }
+
+    .footer-creed {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 0.72rem;
+      color: var(--border);
+      margin-top: 0.8rem;
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HERO -->
+  <div class="hero">
+    <img src="assets/banner.png" alt="pico-nerve-endings — brain with circuit board nerve endings">
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+    <div class="hero-text">
+      <p class="hero-eyebrow">thebardchat / hardware</p>
+      <h1>pico-nerve-endings</h1>
+      <p class="hero-sub">RP2350 firmware &amp; host scripts &nbsp;·&nbsp; ShaneBrain hardware layer</p>
+    </div>
+  </div>
+
+  <main>
+
+    <!-- STATUS BAR -->
+    <div class="status-bar">
+      <div class="status-item">
+        <span class="status-dot"></span>
+        pico2-closet online
+      </div>
+      <span class="status-sep">|</span>
+      <div class="status-item">
+        <span class="status-dot blue"></span>
+        pico2-audio — phase 2
+      </div>
+      <span class="status-sep">|</span>
+      <div class="status-item">MicroPython v1.24+</div>
+      <span class="status-sep">|</span>
+      <div class="status-item">Hazel Green, AL</div>
+    </div>
+
+    <!-- PROJECTS -->
+    <div class="section-label">
+      <span>active projects</span>
+    </div>
+
+    <div class="projects">
+
+      <a class="card"
+         href="https://github.com/thebardchat/pico-nerve-endings/tree/main/projects/temp-sensor"
+         target="_blank" rel="noopener">
+        <div class="sweep"></div>
+        <div class="c-tl"></div>
+        <div class="c-br"></div>
+        <span class="card-number">project / 01</span>
+        <span class="card-icon">🌡️</span>
+        <h3>temp-sensor</h3>
+        <p>Reads the RP2350 onboard temperature sensor. Streams JSON over USB serial every 5 seconds. LED heartbeat on every reading. No extra hardware — just the bare board and a USB cable.</p>
+        <div class="card-tags">
+          <span class="tag live">live</span>
+          <span class="tag">MicroPython</span>
+          <span class="tag">USB Serial</span>
+          <span class="tag">JSON</span>
+          <span class="tag">No BOM</span>
+        </div>
+        <span class="card-cta">View project <span class="arrow">→</span></span>
+      </a>
+
+      <a class="card"
+         href="https://github.com/thebardchat/pico-nerve-endings/tree/main/projects/audio-speaker"
+         target="_blank" rel="noopener">
+        <div class="sweep"></div>
+        <div class="c-tl"></div>
+        <div class="c-br"></div>
+        <span class="card-number">project / 02</span>
+        <span class="card-icon">🔊</span>
+        <h3>audio-speaker</h3>
+        <p>Receives a WAV file over USB serial, plays it via I2S to a MAX98357A amplifier. Paired with the Morning Chaos Briefing — hears the 6 AM dispatch call out loud.</p>
+        <div class="card-tags">
+          <span class="tag soon">phase 2</span>
+          <span class="tag">MicroPython</span>
+          <span class="tag">I2S</span>
+          <span class="tag">MAX98357A</span>
+          <span class="tag">~$15</span>
+        </div>
+        <span class="card-cta">View project <span class="arrow">→</span></span>
+      </a>
+
+    </div>
+
+    <!-- TRACE PULSE -->
+    <div class="trace-row">
+      <div class="node"></div>
+      <div class="line"><div class="pulse"></div></div>
+      <div class="node"></div>
+    </div>
+
+    <!-- ECOSYSTEM -->
+    <div class="section-label">
+      <span>ecosystem</span>
+    </div>
+
+    <div class="ecosystem">
+      <span class="ecosystem-badge">ShaneBrain Stack</span>
+      <div class="ecosystem-grid">
+        <div>
+          <div class="chain">
+            <a class="c-root" href="https://github.com/thebardchat/shanebrain-core" target="_blank">ShaneBrain</a> — Pi 5 core intelligence<br>
+            &nbsp;&nbsp;↳ <a class="c-mid" href="https://github.com/thebardchat/angel-cloud" target="_blank">Angel Cloud</a> — public wellness platform<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;↳ <a class="c-sec" href="https://github.com/thebardchat/pulsar_sentinel" target="_blank">Pulsar Sentinel</a> — post-quantum security<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↳ <span class="c-here">pico-nerve-endings</span>
+          </div>
+          <a class="btn" href="https://thebardchat.github.io" target="_blank" rel="noopener">
+            ↗ Ecosystem Hub
+          </a>
+        </div>
+        <div class="ecosystem-blurb">
+          <p>Every project here is <strong>self-contained and forkable</strong>. Clone one folder, read its README, flash the firmware, run the host script. No ecosystem knowledge required to use a single project.</p>
+          <p style="margin-top:0.8rem">Built with <strong>Claude (Anthropic)</strong> on a Raspberry Pi 5 in a closet in Alabama.</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <p class="footer-links">
+      <a href="https://github.com/thebardchat/pico-nerve-endings" target="_blank">GitHub</a>
+      <span class="sep">·</span>
+      <a href="https://github.com/thebardchat/pico-nerve-endings/blob/main/CONSTITUTION.md" target="_blank">Constitution</a>
+      <span class="sep">·</span>
+      <a href="https://github.com/thebardchat/pico-nerve-endings/blob/main/LICENSE" target="_blank">GPL v3</a>
+      <span class="sep">·</span>
+      <a href="https://github.com/thebardchat" target="_blank">thebardchat</a>
+    </p>
+    <p class="footer-creed">Faith · Family · Sobriety · Local AI · The Left-Behind User</p>
+  </footer>
+
+</body>
+</html>
