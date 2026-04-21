@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Raspberry Pi Pico 2 firmware and host scripts — the peripheral nervous system of ShaneBrain. Self-contained, forkable hardware projects.">
+  <meta name="description" content="Raspberry Pi Pico 2 firmware and host scripts — the peripheral nervous system of ShaneBrain. Sensor ideas, salvage parts, forkable hardware projects.">
   <title>pico-nerve-endings — ShaneBrain Hardware</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,6 +25,10 @@
       --gold:         #c87800;
       --gold-bright:  #f59e0b;
       --gold-glow:    rgba(245, 158, 11, 0.25);
+      --green:        #10b981;
+      --green-dim:    rgba(16, 185, 129, 0.15);
+      --red:          #ef4444;
+      --red-dim:      rgba(239, 68, 68, 0.15);
       --text:         #b0c8e0;
       --text-bright:  #e4efff;
       --text-dim:     #3d5a78;
@@ -45,24 +49,46 @@
       overflow-x: hidden;
     }
 
+    /* ── NEURAL CANVAS ────────────────────────────────── */
+    #neural-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.35;
+    }
+
     /* ── HERO ─────────────────────────────────────────── */
     .hero {
       position: relative;
       width: 100%;
       overflow: hidden;
       background: #000;
+      min-height: 420px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+
+    .hero-canvas-wrap {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
     }
 
     .hero img {
       width: 100%;
-      display: block;
-      max-height: 500px;
+      height: 100%;
       object-fit: cover;
       object-position: center 30%;
-      opacity: 0.88;
+      opacity: 0.45;
+      display: block;
+      position: absolute;
+      inset: 0;
     }
 
-    /* scanline overlay */
     .hero .scanlines {
       position: absolute;
       inset: 0;
@@ -70,28 +96,36 @@
         0deg,
         transparent,
         transparent 2px,
-        rgba(0,0,0,0.12) 2px,
-        rgba(0,0,0,0.12) 4px
+        rgba(0,0,0,0.18) 2px,
+        rgba(0,0,0,0.18) 4px
       );
       pointer-events: none;
+      z-index: 2;
     }
 
-    /* bottom vignette */
     .hero .vignette {
       position: absolute;
       bottom: 0; left: 0; right: 0;
-      height: 220px;
+      height: 260px;
       background: linear-gradient(to bottom, transparent, var(--void));
       pointer-events: none;
+      z-index: 3;
+    }
+
+    .hero .vignette-top {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 100px;
+      background: linear-gradient(to top, transparent, rgba(0,0,0,0.6));
+      pointer-events: none;
+      z-index: 3;
     }
 
     .hero-text {
-      position: absolute;
-      bottom: 1.8rem;
-      left: 0; right: 0;
+      position: relative;
+      z-index: 4;
       text-align: center;
-      z-index: 2;
-      padding: 0 1rem;
+      padding: 4rem 1rem 5rem;
     }
 
     .hero-eyebrow {
@@ -100,33 +134,83 @@
       letter-spacing: 0.4em;
       color: var(--gold-bright);
       text-transform: uppercase;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.7rem;
       opacity: 0.9;
     }
 
     .hero-text h1 {
       font-family: var(--font-display);
       font-weight: 700;
-      font-size: clamp(1.3rem, 3.5vw, 2.4rem);
+      font-size: clamp(1.5rem, 4.5vw, 3rem);
       color: var(--text-bright);
       letter-spacing: 0.08em;
       text-shadow:
-        0 0 30px rgba(0,180,216,0.55),
-        0 0 70px rgba(0,180,216,0.25);
+        0 0 30px rgba(0,180,216,0.8),
+        0 0 80px rgba(0,180,216,0.4),
+        0 0 120px rgba(0,180,216,0.15);
+      animation: heroGlow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes heroGlow {
+      from { text-shadow: 0 0 30px rgba(0,180,216,0.8), 0 0 80px rgba(0,180,216,0.4), 0 0 120px rgba(0,180,216,0.15); }
+      to   { text-shadow: 0 0 50px rgba(0,180,216,1), 0 0 120px rgba(0,180,216,0.6), 0 0 200px rgba(168,85,247,0.2); }
     }
 
     .hero-sub {
       font-family: var(--font-mono);
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       color: var(--blue);
       letter-spacing: 0.18em;
-      margin-top: 0.5rem;
+      margin-top: 0.7rem;
       opacity: 0.85;
+    }
+
+    .hero-tagline {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin-top: 1.2rem;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── DATA STREAM BAR ──────────────────────────────── */
+    .data-stream {
+      position: relative;
+      z-index: 1;
+      background: var(--deep);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      height: 32px;
+      display: flex;
+      align-items: center;
+    }
+
+    .stream-inner {
+      display: flex;
+      gap: 3rem;
+      animation: streamScroll 30s linear infinite;
+      white-space: nowrap;
+      padding-left: 100%;
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .stream-inner span { color: var(--blue); }
+
+    @keyframes streamScroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
     }
 
     /* ── LAYOUT ───────────────────────────────────────── */
     main {
-      max-width: 920px;
+      position: relative;
+      z-index: 1;
+      max-width: 980px;
       margin: 0 auto;
       padding: 4rem 1.5rem 5rem;
     }
@@ -158,11 +242,8 @@
       flex-shrink: 0;
     }
 
-    .status-dot.blue {
-      background: var(--blue);
-      box-shadow: 0 0 8px var(--blue);
-      animation-delay: 1.4s;
-    }
+    .status-dot.blue { background: var(--blue); box-shadow: 0 0 8px var(--blue); animation-delay: 1.4s; }
+    .status-dot.green { background: var(--green); box-shadow: 0 0 8px var(--green); animation-delay: 0.7s; }
 
     @keyframes blink {
       0%,100% { opacity: 1; transform: scale(1); }
@@ -170,19 +251,14 @@
     }
 
     .status-item { display: flex; align-items: center; gap: 0.5rem; }
-
-    .status-sep {
-      color: var(--border);
-      font-size: 1rem;
-      line-height: 1;
-    }
+    .status-sep { color: var(--border); font-size: 1rem; line-height: 1; }
 
     /* ── SECTION LABEL ────────────────────────────────── */
     .section-label {
       display: flex;
       align-items: center;
       gap: 1rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.8rem;
     }
 
     .section-label::after {
@@ -201,6 +277,163 @@
       white-space: nowrap;
     }
 
+    .section-label.gold span { color: var(--gold-bright); }
+    .section-label.purple span { color: var(--purple-glow); }
+    .section-label.green span { color: var(--green); }
+
+    .section-desc {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      margin-bottom: 2rem;
+      line-height: 1.7;
+      max-width: 680px;
+    }
+
+    /* ── TAP POINT CATEGORIES ─────────────────────────── */
+    .tap-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 4rem;
+    }
+
+    .tap-cat {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 1.4rem 1.2rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .tap-cat:hover {
+      box-shadow: 0 0 24px var(--cat-glow, var(--blue-glow));
+      border-color: var(--cat-color, var(--blue));
+    }
+
+    .tap-cat::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--cat-color, var(--blue));
+      box-shadow: 0 0 8px var(--cat-color, var(--blue));
+    }
+
+    .tap-cat-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--cat-color, var(--blue));
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tap-cat-label .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--cat-color, var(--blue));
+      box-shadow: 0 0 6px var(--cat-color, var(--blue));
+    }
+
+    .tap-cat ul {
+      list-style: none;
+      font-size: 0.73rem;
+      color: var(--text-dim);
+      line-height: 2;
+    }
+
+    .tap-cat ul li::before {
+      content: '→ ';
+      color: var(--cat-color, var(--blue));
+      opacity: 0.5;
+    }
+
+    /* ── SALVAGE SECTIONS ─────────────────────────────── */
+    .salvage-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 4rem;
+    }
+
+    @media (max-width: 640px) {
+      .salvage-grid { grid-template-columns: 1fr; }
+      .tap-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 400px) {
+      .tap-grid { grid-template-columns: 1fr; }
+    }
+
+    .salvage-panel {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 1.8rem 1.6rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .salvage-panel::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 60%, var(--panel-glow, var(--blue-glow)) 100%);
+      pointer-events: none;
+    }
+
+    .salvage-panel .panel-title {
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--text-bright);
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .salvage-panel .panel-sub {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 1.4rem;
+    }
+
+    .salvage-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .salvage-list li {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.7rem;
+      align-items: start;
+      font-size: 0.76rem;
+    }
+
+    .salvage-list .part {
+      color: var(--panel-color, var(--blue));
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      white-space: nowrap;
+      margin-top: 0.05rem;
+    }
+
+    .salvage-list .use {
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
     /* ── PROJECT GRID ─────────────────────────────────── */
     .projects {
       display: grid;
@@ -211,6 +444,7 @@
 
     @media (max-width: 580px) {
       .projects { grid-template-columns: 1fr; }
+      .salvage-grid { grid-template-columns: 1fr; }
     }
 
     .card {
@@ -226,42 +460,24 @@
       overflow: hidden;
     }
 
-    /* corner traces — top-left */
-    .card .c-tl,
-    .card .c-br {
+    .card .c-tl, .card .c-br {
       position: absolute;
-      width: 18px;
-      height: 18px;
+      width: 18px; height: 18px;
       opacity: 0.4;
       transition: opacity 0.3s, width 0.3s, height 0.3s;
     }
 
-    .card .c-tl {
-      top: 0; left: 0;
-      border-top: 2px solid var(--blue);
-      border-left: 2px solid var(--blue);
-    }
-
-    .card .c-br {
-      bottom: 0; right: 0;
-      border-bottom: 2px solid var(--blue);
-      border-right: 2px solid var(--blue);
-    }
+    .card .c-tl { top: 0; left: 0; border-top: 2px solid var(--blue); border-left: 2px solid var(--blue); }
+    .card .c-br { bottom: 0; right: 0; border-bottom: 2px solid var(--blue); border-right: 2px solid var(--blue); }
 
     .card:hover {
       border-color: var(--trace);
       transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px var(--trace);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px var(--trace), 0 0 30px rgba(0,180,216,0.08);
     }
 
-    .card:hover .c-tl,
-    .card:hover .c-br {
-      opacity: 1;
-      width: 24px;
-      height: 24px;
-    }
+    .card:hover .c-tl, .card:hover .c-br { opacity: 1; width: 24px; height: 24px; }
 
-    /* sweep glow */
     .card .sweep {
       position: absolute;
       inset: 0;
@@ -282,13 +498,7 @@
       margin-bottom: 1rem;
     }
 
-    .card-icon {
-      font-size: 1.8rem;
-      margin-bottom: 0.9rem;
-      display: block;
-      filter: drop-shadow(0 0 10px var(--gold-bright));
-      line-height: 1;
-    }
+    .card-icon { font-size: 1.8rem; margin-bottom: 0.9rem; display: block; filter: drop-shadow(0 0 10px var(--gold-bright)); line-height: 1; }
 
     .card h3 {
       font-family: var(--font-display);
@@ -307,12 +517,7 @@
       margin-bottom: 1.2rem;
     }
 
-    .card-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      margin-bottom: 1.2rem;
-    }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.2rem; }
 
     .tag {
       font-family: var(--font-mono);
@@ -324,16 +529,10 @@
       text-transform: uppercase;
     }
 
-    .tag.live {
-      border-color: var(--blue-dim);
-      color: var(--blue);
-      box-shadow: inset 0 0 8px rgba(0,180,216,0.08);
-    }
-
-    .tag.soon {
-      border-color: var(--gold);
-      color: var(--gold-bright);
-    }
+    .tag.live  { border-color: var(--blue-dim); color: var(--blue); box-shadow: inset 0 0 8px rgba(0,180,216,0.08); }
+    .tag.soon  { border-color: var(--gold); color: var(--gold-bright); }
+    .tag.idea  { border-color: var(--purple); color: var(--purple-glow); }
+    .tag.salvage { border-color: var(--green); color: var(--green); box-shadow: inset 0 0 8px rgba(16,185,129,0.08); }
 
     .card-cta {
       font-family: var(--font-mono);
@@ -347,11 +546,7 @@
       transition: color 0.2s;
     }
 
-    .card-cta .arrow {
-      display: inline-block;
-      transition: transform 0.25s;
-    }
-
+    .card-cta .arrow { display: inline-block; transition: transform 0.25s; }
     .card:hover .card-cta { color: var(--text-bright); }
     .card:hover .card-cta .arrow { transform: translateX(5px); }
 
@@ -359,7 +554,6 @@
     .trace-row {
       display: flex;
       align-items: center;
-      gap: 0;
       margin: 0 0 3.5rem;
       height: 24px;
     }
@@ -384,19 +578,56 @@
       position: absolute;
       top: -2px;
       left: 0;
-      width: 40px;
+      width: 60px;
       height: 5px;
       background: linear-gradient(to right, transparent, var(--purple-glow), transparent);
       animation: travel 4s linear infinite;
       border-radius: 2px;
     }
 
+    .trace-row .pulse2 {
+      position: absolute;
+      top: -2px;
+      left: 0;
+      width: 60px;
+      height: 5px;
+      background: linear-gradient(to right, transparent, var(--blue), transparent);
+      animation: travel 4s linear infinite 2s;
+      border-radius: 2px;
+    }
+
     @keyframes travel {
-      0%   { left: -40px; opacity: 0; }
+      0%   { left: -60px; opacity: 0; }
       10%  { opacity: 1; }
       90%  { opacity: 1; }
       100% { left: 100%; opacity: 0; }
     }
+
+    /* ── HIGHLIGHT BOX ────────────────────────────────── */
+    .highlight-box {
+      border: 1px solid var(--purple);
+      background: var(--purple-dim);
+      padding: 1.4rem 1.6rem;
+      margin-bottom: 2rem;
+      position: relative;
+    }
+
+    .highlight-box .hb-label {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.3em;
+      color: var(--purple-glow);
+      text-transform: uppercase;
+      margin-bottom: 0.6rem;
+    }
+
+    .highlight-box p {
+      font-size: 0.82rem;
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    .highlight-box strong { color: var(--purple-glow); font-weight: normal; }
 
     /* ── ECOSYSTEM ────────────────────────────────────── */
     .ecosystem {
@@ -427,54 +658,21 @@
       align-items: start;
     }
 
-    @media (max-width: 580px) {
-      .ecosystem-grid { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 580px) { .ecosystem-grid { grid-template-columns: 1fr; } }
 
-    .chain {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      line-height: 2.1;
-      color: var(--text-dim);
-    }
-
-    .chain a {
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
+    .chain { font-family: var(--font-mono); font-size: 0.72rem; line-height: 2.1; color: var(--text-dim); }
+    .chain a { text-decoration: none; transition: color 0.2s; }
     .chain .c-root { color: var(--blue); }
     .chain .c-root:hover { color: var(--text-bright); }
-
     .chain .c-mid  { color: var(--blue-dim); }
     .chain .c-mid:hover { color: var(--blue); }
-
     .chain .c-sec  { color: var(--purple); }
     .chain .c-sec:hover { color: var(--purple-glow); }
+    .chain .c-here { color: var(--gold-bright); position: relative; }
+    .chain .c-here::after { content: ' ◀ you are here'; font-size: 0.55rem; color: var(--text-dim); letter-spacing: 0.15em; }
 
-    .chain .c-here {
-      color: var(--gold-bright);
-      position: relative;
-    }
-
-    .chain .c-here::after {
-      content: ' ◀ you are here';
-      font-size: 0.55rem;
-      color: var(--text-dim);
-      letter-spacing: 0.15em;
-    }
-
-    .ecosystem-blurb {
-      font-size: 0.78rem;
-      color: var(--text-dim);
-      line-height: 1.6;
-      max-width: 280px;
-    }
-
-    .ecosystem-blurb strong {
-      color: var(--purple-glow);
-      font-weight: normal;
-    }
+    .ecosystem-blurb { font-size: 0.78rem; color: var(--text-dim); line-height: 1.6; max-width: 280px; }
+    .ecosystem-blurb strong { color: var(--purple-glow); font-weight: normal; }
 
     .btn {
       display: inline-flex;
@@ -495,18 +693,16 @@
       white-space: nowrap;
     }
 
-    .btn:hover {
-      background: var(--purple-dim);
-      color: var(--text-bright);
-      box-shadow: 0 0 24px rgba(124,58,237,0.2);
-    }
+    .btn:hover { background: var(--purple-dim); color: var(--text-bright); box-shadow: 0 0 24px rgba(124,58,237,0.2); }
 
     /* ── FOOTER ───────────────────────────────────────── */
     footer {
+      position: relative;
+      z-index: 1;
       border-top: 1px solid var(--border);
       padding: 2rem 1.5rem;
       text-align: center;
-      max-width: 920px;
+      max-width: 980px;
       margin: 0 auto;
     }
 
@@ -518,37 +714,118 @@
       text-transform: uppercase;
     }
 
-    .footer-links a {
-      color: var(--text-dim);
-      text-decoration: none;
-      transition: color 0.2s;
+    .footer-links a { color: var(--text-dim); text-decoration: none; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--blue); }
+    .footer-links .sep { margin: 0 0.8rem; color: var(--border); }
+    .footer-creed { font-family: var(--font-body); font-style: italic; font-size: 0.72rem; color: var(--border); margin-top: 0.8rem; letter-spacing: 0.04em; }
+
+    /* ── CIRCUIT DECORATIONS ──────────────────────────── */
+    .circuit-divider {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin: 3.5rem 0;
     }
 
-    .footer-links a:hover { color: var(--blue); }
+    .circuit-divider .cd-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
 
-    .footer-links .sep { margin: 0 0.8rem; color: var(--border); }
+    .circuit-divider .cd-center {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      color: var(--text-dim);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
 
-    .footer-creed {
-      font-family: var(--font-body);
-      font-style: italic;
-      font-size: 0.72rem;
-      color: var(--border);
-      margin-top: 0.8rem;
-      letter-spacing: 0.04em;
+    .circuit-divider .cd-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--trace);
+    }
+
+    /* ── STAT ROW ─────────────────────────────────────── */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      margin-bottom: 3.5rem;
+    }
+
+    @media (max-width: 580px) { .stat-row { grid-template-columns: repeat(2, 1fr); } }
+
+    .stat-cell {
+      background: var(--deep);
+      padding: 1.2rem 1rem;
+      text-align: center;
+    }
+
+    .stat-cell .num {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--blue);
+      text-shadow: 0 0 20px rgba(0,180,216,0.5);
+      display: block;
+    }
+
+    .stat-cell .lbl {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      letter-spacing: 0.2em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-top: 0.3rem;
+      display: block;
     }
   </style>
 </head>
 <body>
+
+  <!-- NEURAL NETWORK BACKGROUND CANVAS -->
+  <canvas id="neural-canvas"></canvas>
 
   <!-- HERO -->
   <div class="hero">
     <img src="assets/banner.png" alt="pico-nerve-endings — brain with circuit board nerve endings">
     <div class="scanlines"></div>
     <div class="vignette"></div>
+    <div class="vignette-top"></div>
     <div class="hero-text">
-      <p class="hero-eyebrow">thebardchat / hardware</p>
+      <p class="hero-eyebrow">thebardchat / hardware · RP2350 · Hazel Green AL</p>
       <h1>pico-nerve-endings</h1>
-      <p class="hero-sub">RP2350 firmware &amp; host scripts &nbsp;·&nbsp; ShaneBrain hardware layer</p>
+      <p class="hero-sub">peripheral nervous system &nbsp;·&nbsp; sensors &nbsp;·&nbsp; speakers &nbsp;·&nbsp; salvage lab</p>
+      <p class="hero-tagline">tiny boards wired into a bigger brain — every nerve ending is a forkable project</p>
+    </div>
+  </div>
+
+  <!-- DATA STREAM -->
+  <div class="data-stream">
+    <div class="stream-inner">
+      <span>I2C</span> BME280 · MPU6050 · MAX30102 · SSD1306 · DS3231 ·
+      <span>SPI</span> SD Card · RFID · ILI9341 · LoRa SX1278 ·
+      <span>UART</span> GPS NEO-8M · GSM SIM800L · HC-05 Bluetooth ·
+      <span>I2S</span> MAX98357A · PCM5102 · INMP441 ·
+      <span>PIO</span> WS2812 · Stepper · Quadrature Encoder ·
+      <span>USB HID</span> Keyboard · Mouse · MIDI · Gamepad ·
+      <span>ADC</span> Microphone · Soil Moisture · MQ Gas · LDR ·
+      &nbsp;·&nbsp;
+      <span>I2C</span> BME280 · MPU6050 · MAX30102 · SSD1306 · DS3231 ·
+      <span>SPI</span> SD Card · RFID · ILI9341 · LoRa SX1278 ·
+      <span>UART</span> GPS NEO-8M · GSM SIM800L · HC-05 Bluetooth ·
+      <span>I2S</span> MAX98357A · PCM5102 · INMP441 ·
+      <span>PIO</span> WS2812 · Stepper · Quadrature Encoder ·
+      <span>USB HID</span> Keyboard · Mouse · MIDI · Gamepad ·
+      <span>ADC</span> Microphone · Soil Moisture · MQ Gas · LDR ·
     </div>
   </div>
 
@@ -556,22 +833,212 @@
 
     <!-- STATUS BAR -->
     <div class="status-bar">
-      <div class="status-item">
-        <span class="status-dot"></span>
-        pico2-closet online
-      </div>
+      <div class="status-item"><span class="status-dot"></span>pico2-closet online</div>
       <span class="status-sep">|</span>
-      <div class="status-item">
-        <span class="status-dot blue"></span>
-        pico2-audio — phase 2
-      </div>
+      <div class="status-item"><span class="status-dot blue"></span>pico2-audio — phase 2</div>
       <span class="status-sep">|</span>
-      <div class="status-item">MicroPython v1.24+</div>
+      <div class="status-item"><span class="status-dot green"></span>MicroPython v1.24+</div>
+      <span class="status-sep">|</span>
+      <div class="status-item">RP2350 · dual ARM M33 + RISC-V</div>
       <span class="status-sep">|</span>
       <div class="status-item">Hazel Green, AL</div>
     </div>
 
-    <!-- PROJECTS -->
+    <!-- STAT ROW -->
+    <div class="stat-row">
+      <div class="stat-cell"><span class="num">9</span><span class="lbl">Bus Protocols</span></div>
+      <div class="stat-cell"><span class="num">30+</span><span class="lbl">Tap Points</span></div>
+      <div class="stat-cell"><span class="num">20+</span><span class="lbl">Salvage Parts</span></div>
+      <div class="stat-cell"><span class="num">∞</span><span class="lbl">Fork It</span></div>
+    </div>
+
+    <!-- NERVE TAP POINTS ─────────────────────────────── -->
+    <div class="section-label">
+      <span>nerve tap points — what the pico 2 can plug into</span>
+    </div>
+
+    <p class="section-desc">
+      The RP2350 has 26 GPIO pins, 2 I2C buses, 2 SPI buses, 2 UART ports, 3 ADC channels,
+      2 I2S interfaces, 2 programmable state machines (PIO), and native USB — plus 520KB of SRAM and
+      4MB of flash. Every peripheral below is a MicroPython import away.
+    </p>
+
+    <div class="tap-grid">
+
+      <div class="tap-cat" style="--cat-color:#00b4d8; --cat-glow:rgba(0,180,216,0.12)">
+        <div class="tap-cat-label"><div class="dot"></div>I2C Bus</div>
+        <ul>
+          <li>BME280 — temp / humidity / pressure</li>
+          <li>MPU6050 — accelerometer + gyro</li>
+          <li>MAX30102 — heart rate / SpO2</li>
+          <li>SSD1306 — 128×64 OLED display</li>
+          <li>VL53L0X — laser distance (ToF)</li>
+          <li>DS3231 — real-time clock</li>
+          <li>ADS1115 — 4-ch 16-bit ADC</li>
+          <li>ENS160 — VOC + CO₂ air quality</li>
+          <li>HMC5883L — compass</li>
+        </ul>
+      </div>
+
+      <div class="tap-cat" style="--cat-color:#a855f7; --cat-glow:rgba(168,85,247,0.12)">
+        <div class="tap-cat-label"><div class="dot"></div>SPI Bus</div>
+        <ul>
+          <li>SD card reader — local data logging</li>
+          <li>ILI9341 / ST7789 — color TFT display</li>
+          <li>RFID RC522 — card tap / access</li>
+          <li>LoRa SX1278 — long-range radio</li>
+          <li>W5500 — wired Ethernet</li>
+          <li>MCP4921 — 12-bit DAC output</li>
+          <li>NRF24L01 — 2.4 GHz radio link</li>
+        </ul>
+      </div>
+
+      <div class="tap-cat" style="--cat-color:#f59e0b; --cat-glow:rgba(245,158,11,0.12)">
+        <div class="tap-cat-label"><div class="dot"></div>UART / Serial</div>
+        <ul>
+          <li>NEO-6M / NEO-8M — GPS position</li>
+          <li>SIM800L / SIM7600 — SMS + 4G data</li>
+          <li>HC-05 / HC-06 — Bluetooth serial</li>
+          <li>RS485 / Modbus — industrial sensors</li>
+          <li>Pi 5 host — command + data bridge</li>
+          <li>NMEA weather station sensors</li>
+        </ul>
+      </div>
+
+      <div class="tap-cat" style="--cat-color:#10b981; --cat-glow:rgba(16,185,129,0.12)">
+        <div class="tap-cat-label"><div class="dot"></div>ADC Inputs</div>
+        <ul>
+          <li>Electret microphone — audio level</li>
+          <li>Potentiometer — manual control</li>
+          <li>LDR — ambient light reading</li>
+          <li>Soil moisture probe — plant alert</li>
+          <li>MQ-2 / MQ-7 / MQ-135 — gas sensors</li>
+          <li>ACS712 — current sensor</li>
+          <li>Thermistor — precision temp</li>
+        </ul>
+      </div>
+
+      <div class="tap-cat" style="--cat-color:#ef4444; --cat-glow:rgba(239,68,68,0.12)">
+        <div class="tap-cat-label"><div class="dot"></div>I2S Audio</div>
+        <ul>
+          <li>MAX98357A — 3W Class D amp (speaker out)</li>
+          <li>PCM5102 — hi-fi stereo DAC</li>
+          <li>INMP441 — MEMS microphone in</li>
+          <li>MAX9814 — auto-gain mic amp</li>
+          <li>WM8960 — stereo codec in/out</li>
+        </ul>
+      </div>
+
+      <div class="tap-cat" style="--cat-color:#6366f1; --cat-glow:rgba(99,102,241,0.12)">
+        <div class="tap-cat-label"><div class="dot"></div>PIO State Machine</div>
+        <ul>
+          <li>WS2812 NeoPixel strips — any length</li>
+          <li>Stepper motor — precise timing</li>
+          <li>Quadrature encoder — position tracking</li>
+          <li>Custom serial protocol — any baud</li>
+          <li>DCC — model train control</li>
+          <li>I2S bit-bang — custom audio</li>
+          <li>PS/2 keyboard / mouse decode</li>
+        </ul>
+      </div>
+
+      <div class="tap-cat" style="--cat-color:#06b6d4; --cat-glow:rgba(6,182,212,0.12)">
+        <div class="tap-cat-label"><div class="dot"></div>USB HID (emulate)</div>
+        <ul>
+          <li>Keyboard — macro pad / stream deck</li>
+          <li>Mouse / joystick</li>
+          <li>MIDI controller — DAW integration</li>
+          <li>Gamepad — retro controller</li>
+          <li>CDC serial — Pi 5 data bridge</li>
+          <li>Mass storage — appear as USB drive</li>
+        </ul>
+      </div>
+
+      <div class="tap-cat" style="--cat-color:#f97316; --cat-glow:rgba(249,115,22,0.12)">
+        <div class="tap-cat-label"><div class="dot"></div>GPIO / PWM</div>
+        <ul>
+          <li>Relay module — mains switching</li>
+          <li>Servo motor — pan/tilt/mechanical</li>
+          <li>A4988 stepper driver — CNC axis</li>
+          <li>IR TX/RX — remote control signals</li>
+          <li>HC-SR04 ultrasonic — distance</li>
+          <li>PIR — passive motion detect</li>
+          <li>Piezo buzzer — tones + alerts</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- CIRCUIT DIVIDER -->
+    <div class="circuit-divider">
+      <div class="cd-line"></div>
+      <div class="cd-center"><div class="cd-dot"></div>salvage lab<div class="cd-dot"></div></div>
+      <div class="cd-line"></div>
+    </div>
+
+    <!-- SALVAGE LAB ──────────────────────────────────── -->
+    <div class="section-label gold">
+      <span>salvage lab — strip old hardware, build something new</span>
+    </div>
+
+    <div class="highlight-box">
+      <div class="hb-label">philosophy</div>
+      <p>You don't need to buy a sensor kit. Old phones and computers are full of <strong>precision hardware</strong> that was engineered to last — motors, cameras, speakers, batteries, gyroscopes, displays. Strip them, wire them to a Pico 2, give them a second life doing something useful.</p>
+    </div>
+
+    <div class="salvage-grid">
+
+      <div class="salvage-panel" style="--panel-color:#a855f7; --panel-glow:rgba(168,85,247,0.1)">
+        <div class="panel-title">📱 Old Cellphones</div>
+        <div class="panel-sub">strip it down · wire it up</div>
+        <ul class="salvage-list">
+          <li><span class="part">Vibration motor</span><span class="use">ERM tactile motor → haptic alerts wired to Pico GPIO + transistor</span></li>
+          <li><span class="part">Camera module</span><span class="use">OV2640 / OV7670 → motion detection or time-lapse via Pico PIO + DVP interface</span></li>
+          <li><span class="part">OLED / LCD screen</span><span class="use">SPI or I2C display → mini status ticker, temp readout, clock face</span></li>
+          <li><span class="part">Electret mic</span><span class="use">Tiny capsule → Pico ADC audio level meter or voice-trigger circuit</span></li>
+          <li><span class="part">Small speaker</span><span class="use">8Ω 0.5W → pair with MAX98357A for I2S audio out on the cheap</span></li>
+          <li><span class="part">Li-Po battery</span><span class="use">3.7V cell + TP4056 charging board → fully off-grid / solar Pico node</span></li>
+          <li><span class="part">Accelerometer / gyro</span><span class="use">MPU6050-era chip → tilt sensing, shake detection, orientation data over I2C</span></li>
+          <li><span class="part">GPS chip</span><span class="use">If present, desolder and use raw UART NMEA stream → location-aware sensors</span></li>
+          <li><span class="part">NFC antenna</span><span class="use">Pair with PN532 breakout → tap-to-identify, card presence detect</span></li>
+          <li><span class="part">Proximity sensor</span><span class="use">IR photodiode pair → touchless button, object present / absent detection</span></li>
+          <li><span class="part">Fingerprint sensor</span><span class="use">FPC1020-type → biometric trigger for door lock or boot gate via UART</span></li>
+          <li><span class="part">WiFi antenna wire</span><span class="use">Extend range on Pico W by soldering to U.FL pad with salvaged antenna</span></li>
+        </ul>
+      </div>
+
+      <div class="salvage-panel" style="--panel-color:#10b981; --panel-glow:rgba(16,185,129,0.1)">
+        <div class="panel-title">🖥️ Old Computers &amp; Laptops</div>
+        <div class="panel-sub">strip it down · wire it up</div>
+        <ul class="salvage-list">
+          <li><span class="part">CPU cooling fan</span><span class="use">3-pin / 4-pin PC fan → PWM-controlled enclosure ventilation, Pico reads temp + drives fan</span></li>
+          <li><span class="part">ATX power supply</span><span class="use">Stable 12V / 5V / 3.3V rails → bench supply for any Pico project, no batteries needed</span></li>
+          <li><span class="part">Keyboard matrix</span><span class="use">Laptop membrane + controller → custom macro pad via Pico USB HID emulation</span></li>
+          <li><span class="part">Touchpad</span><span class="use">I2C trackpad chip → touch-drag control surface for Pico W web dashboards</span></li>
+          <li><span class="part">DVD stepper motor</span><span class="use">Precision lead screw actuator → camera slider, pen plotter, mini linear stage</span></li>
+          <li><span class="part">Optical encoder</span><span class="use">CD/DVD sled encoder strip → sub-mm position feedback via Pico PIO quadrature decode</span></li>
+          <li><span class="part">HDD rare earth magnets</span><span class="use">Incredibly strong neodymiums → magnetic field experiments, reed switch triggering</span></li>
+          <li><span class="part">HDD platters</span><span class="use">Mirror-finish discs → persistence-of-vision display: spin + laser + Pico PIO timing</span></li>
+          <li><span class="part">CD drive laser</span><span class="use">650nm diode → laser pointer, basic LIDAR distance experiments (low power)</span></li>
+          <li><span class="part">Laptop battery cells</span><span class="use">18650 cells inside dead packs → high-capacity power bank for extended field nodes</span></li>
+          <li><span class="part">Webcam (USB)</span><span class="use">With RP2350 USB host mode → image capture, barcode scan, basic vision input</span></li>
+          <li><span class="part">Internal mic / speaker</span><span class="use">Salvaged laptop audio → input + output for Pico I2S audio pipeline, no BOM cost</span></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- TRACE PULSE -->
+    <div class="trace-row">
+      <div class="node"></div>
+      <div class="line">
+        <div class="pulse"></div>
+        <div class="pulse2"></div>
+      </div>
+      <div class="node"></div>
+    </div>
+
+    <!-- PROJECTS ─────────────────────────────────────── -->
     <div class="section-label">
       <span>active projects</span>
     </div>
@@ -587,7 +1054,7 @@
         <span class="card-number">project / 01</span>
         <span class="card-icon">🌡️</span>
         <h3>temp-sensor</h3>
-        <p>Reads the RP2350 onboard temperature sensor. Streams JSON over USB serial every 5 seconds. LED heartbeat on every reading. No extra hardware — just the bare board and a USB cable.</p>
+        <p>Reads the RP2350 onboard temperature sensor. Streams JSON over USB serial every 5 seconds. LED heartbeat on every reading. No extra hardware — just the bare board and a USB cable. Live on the Pi 5 closet node.</p>
         <div class="card-tags">
           <span class="tag live">live</span>
           <span class="tag">MicroPython</span>
@@ -607,7 +1074,7 @@
         <span class="card-number">project / 02</span>
         <span class="card-icon">🔊</span>
         <h3>audio-speaker</h3>
-        <p>Receives a WAV file over USB serial, plays it via I2S to a MAX98357A amplifier. Paired with the Morning Chaos Briefing — hears the 6 AM dispatch call out loud.</p>
+        <p>Receives a WAV file over USB serial, plays it via I2S to a MAX98357A amplifier. Paired with the Morning Chaos Briefing — hears the 6 AM dispatch call out loud. Salvageable: use a phone speaker instead of buying one.</p>
         <div class="card-tags">
           <span class="tag soon">phase 2</span>
           <span class="tag">MicroPython</span>
@@ -618,17 +1085,136 @@
         <span class="card-cta">View project <span class="arrow">→</span></span>
       </a>
 
+      <a class="card"
+         href="https://github.com/thebardchat/pico-nerve-endings"
+         target="_blank" rel="noopener">
+        <div class="sweep"></div>
+        <div class="c-tl"></div>
+        <div class="c-br"></div>
+        <span class="card-number">project / 03</span>
+        <span class="card-icon">💨</span>
+        <h3>fan-controller</h3>
+        <p>Salvaged PC fan wired to Pico PWM. Reads temp from BME280 via I2C, drives fan speed proportionally. Logs RPM tach pulses via GPIO interrupt. Mount it in any enclosure that gets hot.</p>
+        <div class="card-tags">
+          <span class="tag idea">idea</span>
+          <span class="tag salvage">PC fan</span>
+          <span class="tag">PWM</span>
+          <span class="tag">BME280</span>
+        </div>
+        <span class="card-cta">Fork and build it <span class="arrow">→</span></span>
+      </a>
+
+      <a class="card"
+         href="https://github.com/thebardchat/pico-nerve-endings"
+         target="_blank" rel="noopener">
+        <div class="sweep"></div>
+        <div class="c-tl"></div>
+        <div class="c-br"></div>
+        <span class="card-number">project / 04</span>
+        <span class="card-icon">📳</span>
+        <h3>haptic-notifier</h3>
+        <p>Phone vibration motor driven by Pico GPIO + NPN transistor. Pi 5 sends events over serial (Discord DM, alerter trigger, dispatch ping). Pico buzzes once for info, three times for urgent.</p>
+        <div class="card-tags">
+          <span class="tag idea">idea</span>
+          <span class="tag salvage">phone motor</span>
+          <span class="tag">GPIO</span>
+          <span class="tag">USB CDC</span>
+        </div>
+        <span class="card-cta">Fork and build it <span class="arrow">→</span></span>
+      </a>
+
+      <a class="card"
+         href="https://github.com/thebardchat/pico-nerve-endings"
+         target="_blank" rel="noopener">
+        <div class="sweep"></div>
+        <div class="c-tl"></div>
+        <div class="c-br"></div>
+        <span class="card-number">project / 05</span>
+        <span class="card-icon">🔑</span>
+        <h3>rfid-access</h3>
+        <p>RC522 RFID reader on SPI. Logs card UIDs over serial to Pi 5 → ShaneBrain Weaviate SecurityLog. One known card = open relay, unknown card = Discord alert. Salvage: use an old phone NFC coil as antenna extension.</p>
+        <div class="card-tags">
+          <span class="tag idea">idea</span>
+          <span class="tag">SPI</span>
+          <span class="tag">RC522</span>
+          <span class="tag">Relay</span>
+          <span class="tag">~$8</span>
+        </div>
+        <span class="card-cta">Fork and build it <span class="arrow">→</span></span>
+      </a>
+
+      <a class="card"
+         href="https://github.com/thebardchat/pico-nerve-endings"
+         target="_blank" rel="noopener">
+        <div class="sweep"></div>
+        <div class="c-tl"></div>
+        <div class="c-br"></div>
+        <span class="card-number">project / 06</span>
+        <span class="card-icon">💡</span>
+        <h3>neopixel-ring</h3>
+        <p>WS2812 LED ring driven by Pico PIO state machine — zero CPU overhead. Pi 5 sends system health JSON over serial. Green = all good, amber = warning, red + chase = alert. Mount anywhere visible.</p>
+        <div class="card-tags">
+          <span class="tag idea">idea</span>
+          <span class="tag">PIO</span>
+          <span class="tag">WS2812</span>
+          <span class="tag">USB CDC</span>
+          <span class="tag">~$6</span>
+        </div>
+        <span class="card-cta">Fork and build it <span class="arrow">→</span></span>
+      </a>
+
+      <a class="card"
+         href="https://github.com/thebardchat/pico-nerve-endings"
+         target="_blank" rel="noopener">
+        <div class="sweep"></div>
+        <div class="c-tl"></div>
+        <div class="c-br"></div>
+        <span class="card-number">project / 07</span>
+        <span class="card-icon">🌿</span>
+        <h3>soil-monitor</h3>
+        <p>Capacitive soil moisture probe on Pico ADC. Posts readings every 30 min over serial to Pi 5 → ShaneBrain daily note. Add a relay to auto-water when dry. Good first-build for anyone starting with ADC.</p>
+        <div class="card-tags">
+          <span class="tag idea">idea</span>
+          <span class="tag">ADC</span>
+          <span class="tag">Relay</span>
+          <span class="tag">~$4</span>
+        </div>
+        <span class="card-cta">Fork and build it <span class="arrow">→</span></span>
+      </a>
+
+      <a class="card"
+         href="https://github.com/thebardchat/pico-nerve-endings"
+         target="_blank" rel="noopener">
+        <div class="sweep"></div>
+        <div class="c-tl"></div>
+        <div class="c-br"></div>
+        <span class="card-number">project / 08</span>
+        <span class="card-icon">⌨️</span>
+        <h3>macro-pad</h3>
+        <p>Salvaged laptop keyboard matrix decoded by Pico, presented to the host as USB HID keyboard. Map any key to any macro, script, or Discord command. No drivers. Plug in, it works. Dead laptops reborn.</p>
+        <div class="card-tags">
+          <span class="tag idea">idea</span>
+          <span class="tag salvage">laptop keyboard</span>
+          <span class="tag">USB HID</span>
+          <span class="tag">$0 BOM</span>
+        </div>
+        <span class="card-cta">Fork and build it <span class="arrow">→</span></span>
+      </a>
+
     </div>
 
     <!-- TRACE PULSE -->
     <div class="trace-row">
       <div class="node"></div>
-      <div class="line"><div class="pulse"></div></div>
+      <div class="line">
+        <div class="pulse"></div>
+        <div class="pulse2"></div>
+      </div>
       <div class="node"></div>
     </div>
 
-    <!-- ECOSYSTEM -->
-    <div class="section-label">
+    <!-- ECOSYSTEM ────────────────────────────────────── -->
+    <div class="section-label purple">
       <span>ecosystem</span>
     </div>
 
@@ -647,8 +1233,9 @@
           </a>
         </div>
         <div class="ecosystem-blurb">
-          <p>Every project here is <strong>self-contained and forkable</strong>. Clone one folder, read its README, flash the firmware, run the host script. No ecosystem knowledge required to use a single project.</p>
+          <p>Every project here is <strong>self-contained and forkable</strong>. Clone one folder, read its README, flash the firmware, run the host script. No ecosystem knowledge required.</p>
           <p style="margin-top:0.8rem">Built with <strong>Claude (Anthropic)</strong> on a Raspberry Pi 5 in a closet in Alabama.</p>
+          <p style="margin-top:0.8rem">Faith · Family · Sobriety · Local AI<br>The Left-Behind User</p>
         </div>
       </div>
     </div>
@@ -664,9 +1251,111 @@
       <a href="https://github.com/thebardchat/pico-nerve-endings/blob/main/LICENSE" target="_blank">GPL v3</a>
       <span class="sep">·</span>
       <a href="https://github.com/thebardchat" target="_blank">thebardchat</a>
+      <span class="sep">·</span>
+      <a href="https://thebardchat.github.io" target="_blank">Ecosystem Hub</a>
     </p>
     <p class="footer-creed">Faith · Family · Sobriety · Local AI · The Left-Behind User</p>
   </footer>
+
+  <!-- NEURAL NETWORK ANIMATION -->
+  <script>
+  (function() {
+    const canvas = document.getElementById('neural-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let W, H, nodes, raf;
+
+    const COLORS = {
+      node:    '#00b4d8',
+      nodeDim: '#0077a8',
+      link:    '#1e3060',
+      pulse:   '#a855f7',
+      gold:    '#f59e0b',
+    };
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+
+    function makeNodes(n) {
+      return Array.from({length: n}, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        r:  Math.random() * 2.5 + 1,
+        pulse: Math.random(),
+        pulseSpeed: Math.random() * 0.008 + 0.003,
+        color: Math.random() < 0.15 ? COLORS.gold : Math.random() < 0.5 ? COLORS.node : COLORS.nodeDim,
+      }));
+    }
+
+    function init() {
+      resize();
+      const count = Math.min(80, Math.floor((W * H) / 18000));
+      nodes = makeNodes(count);
+    }
+
+    function draw(t) {
+      ctx.clearRect(0, 0, W, H);
+
+      const MAX_DIST = 160;
+      const MAX_DIST_SQ = MAX_DIST * MAX_DIST;
+
+      for (let i = 0; i < nodes.length; i++) {
+        const a = nodes[i];
+        a.x += a.vx;
+        a.y += a.vy;
+        if (a.x < 0 || a.x > W) a.vx *= -1;
+        if (a.y < 0 || a.y > H) a.vy *= -1;
+        a.pulse += a.pulseSpeed;
+
+        for (let j = i + 1; j < nodes.length; j++) {
+          const b = nodes[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const dSq = dx * dx + dy * dy;
+          if (dSq > MAX_DIST_SQ) continue;
+          const dist = Math.sqrt(dSq);
+          const alpha = (1 - dist / MAX_DIST) * 0.5;
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(30, 48, 96, ${alpha})`;
+          ctx.lineWidth = 0.6;
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+
+          if (Math.sin(t * 0.0008 + i * 0.7) > 0.95) {
+            const pct = (Math.sin(t * 0.002 + i) + 1) / 2;
+            const px = a.x + (b.x - a.x) * pct;
+            const py = a.y + (b.y - a.y) * pct;
+            ctx.beginPath();
+            ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(168, 85, 247, ${alpha * 1.5})`;
+            ctx.fill();
+          }
+        }
+      }
+
+      for (const n of nodes) {
+        const glow = (Math.sin(n.pulse) + 1) / 2;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r + glow * 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = n.color;
+        ctx.globalAlpha = 0.5 + glow * 0.5;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      raf = requestAnimationFrame(draw);
+    }
+
+    init();
+    window.addEventListener('resize', () => { init(); });
+    raf = requestAnimationFrame(draw);
+  })();
+  </script>
 
 </body>
 </html>
