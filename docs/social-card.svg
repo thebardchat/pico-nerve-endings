@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0015;stop-opacity:1"/>
+      <stop offset="50%" style="stop-color:#12004a;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#050010;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="trace1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:0"/>
+      <stop offset="50%" style="stop-color:#a855f7;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:0"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow2">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Circuit grid lines -->
+  <g opacity="0.12" stroke="#8b5cf6" stroke-width="1">
+    <line x1="0" y1="80" x2="1200" y2="80"/>
+    <line x1="0" y1="160" x2="1200" y2="160"/>
+    <line x1="0" y1="240" x2="1200" y2="240"/>
+    <line x1="0" y1="320" x2="1200" y2="320"/>
+    <line x1="0" y1="400" x2="1200" y2="400"/>
+    <line x1="0" y1="480" x2="1200" y2="480"/>
+    <line x1="0" y1="560" x2="1200" y2="560"/>
+    <line x1="100" y1="0" x2="100" y2="630"/>
+    <line x1="200" y1="0" x2="200" y2="630"/>
+    <line x1="300" y1="0" x2="300" y2="630"/>
+    <line x1="400" y1="0" x2="400" y2="630"/>
+    <line x1="500" y1="0" x2="500" y2="630"/>
+    <line x1="600" y1="0" x2="600" y2="630"/>
+    <line x1="700" y1="0" x2="700" y2="630"/>
+    <line x1="800" y1="0" x2="800" y2="630"/>
+    <line x1="900" y1="0" x2="900" y2="630"/>
+    <line x1="1000" y1="0" x2="1000" y2="630"/>
+    <line x1="1100" y1="0" x2="1100" y2="630"/>
+  </g>
+
+  <!-- Circuit traces (purple lines with glows) -->
+  <g filter="url(#glow)" stroke-width="2.5" fill="none">
+    <polyline points="50,200 150,200 150,300 350,300 350,180 600,180" stroke="#a855f7" opacity="0.8"/>
+    <polyline points="600,180 700,180 700,240 900,240 900,160 1100,160" stroke="#8b5cf6" opacity="0.7"/>
+    <polyline points="200,450 400,450 400,380 650,380 650,420 850,420 850,350 1050,350" stroke="#a855f7" opacity="0.6"/>
+    <polyline points="80,520 250,520 250,460 500,460 500,500 750,500 750,470 1000,470" stroke="#7c3aed" opacity="0.5"/>
+  </g>
+
+  <!-- Tap point nodes -->
+  <g filter="url(#glow2)">
+    <circle cx="150" cy="200" r="5" fill="#e879f9" opacity="0.9"/>
+    <circle cx="350" cy="300" r="5" fill="#e879f9" opacity="0.9"/>
+    <circle cx="700" cy="180" r="5" fill="#c084fc" opacity="0.9"/>
+    <circle cx="900" cy="240" r="5" fill="#e879f9" opacity="0.9"/>
+    <circle cx="400" cy="450" r="5" fill="#c084fc" opacity="0.9"/>
+    <circle cx="650" cy="380" r="5" fill="#e879f9" opacity="0.9"/>
+    <circle cx="850" cy="420" r="5" fill="#c084fc" opacity="0.9"/>
+    <circle cx="250" cy="520" r="5" fill="#e879f9" opacity="0.9"/>
+    <circle cx="500" cy="460" r="5" fill="#c084fc" opacity="0.9"/>
+    <circle cx="750" cy="500" r="5" fill="#e879f9" opacity="0.9"/>
+  </g>
+
+  <!-- Chip outline center-right -->
+  <g transform="translate(780, 220)">
+    <rect x="0" y="0" width="200" height="160" rx="4" fill="none" stroke="#7c3aed" stroke-width="2" opacity="0.7"/>
+    <rect x="8" y="8" width="184" height="144" rx="2" fill="#1a0035" opacity="0.6"/>
+    <!-- Chip pins left -->
+    <line x1="-20" y1="30" x2="0" y2="30" stroke="#a855f7" stroke-width="2"/>
+    <line x1="-20" y1="55" x2="0" y2="55" stroke="#a855f7" stroke-width="2"/>
+    <line x1="-20" y1="80" x2="0" y2="80" stroke="#a855f7" stroke-width="2"/>
+    <line x1="-20" y1="105" x2="0" y2="105" stroke="#a855f7" stroke-width="2"/>
+    <line x1="-20" y1="130" x2="0" y2="130" stroke="#a855f7" stroke-width="2"/>
+    <!-- Chip pins right -->
+    <line x1="200" y1="30" x2="220" y2="30" stroke="#a855f7" stroke-width="2"/>
+    <line x1="200" y1="55" x2="220" y2="55" stroke="#a855f7" stroke-width="2"/>
+    <line x1="200" y1="80" x2="220" y2="80" stroke="#a855f7" stroke-width="2"/>
+    <line x1="200" y1="105" x2="220" y2="105" stroke="#a855f7" stroke-width="2"/>
+    <line x1="200" y1="130" x2="220" y2="130" stroke="#a855f7" stroke-width="2"/>
+    <!-- Chip pins top -->
+    <line x1="40" y1="-20" x2="40" y2="0" stroke="#a855f7" stroke-width="2"/>
+    <line x1="80" y1="-20" x2="80" y2="0" stroke="#a855f7" stroke-width="2"/>
+    <line x1="120" y1="-20" x2="120" y2="0" stroke="#a855f7" stroke-width="2"/>
+    <line x1="160" y1="-20" x2="160" y2="0" stroke="#a855f7" stroke-width="2"/>
+    <!-- Chip text -->
+    <text x="100" y="70" text-anchor="middle" fill="#c084fc" font-family="monospace" font-size="14" font-weight="bold">RP2350</text>
+    <text x="100" y="92" text-anchor="middle" fill="#9333ea" font-family="monospace" font-size="10">PICO 2</text>
+  </g>
+
+  <!-- Decorative corner accents -->
+  <g stroke="#7c3aed" stroke-width="2" fill="none" opacity="0.5">
+    <polyline points="20,20 20,60 60,60"/>
+    <polyline points="1180,20 1180,60 1140,60"/>
+    <polyline points="20,610 20,570 60,570"/>
+    <polyline points="1180,610 1180,570 1140,570"/>
+  </g>
+
+  <!-- Main title -->
+  <text x="100" y="110" font-family="monospace" font-size="58" font-weight="bold" fill="#e879f9" filter="url(#glow)">PICO 2</text>
+  <text x="100" y="160" font-family="monospace" font-size="32" font-weight="bold" fill="#c084fc">NERVE ENDINGS</text>
+
+  <!-- Tagline -->
+  <text x="100" y="210" font-family="monospace" font-size="16" fill="#a78bfa">RP2350 hardware tap points &amp; salvage parts guide</text>
+
+  <!-- Stats row -->
+  <g font-family="monospace" font-size="22" font-weight="bold">
+    <rect x="98" y="380" width="200" height="55" rx="6" fill="#1a0035" stroke="#7c3aed" stroke-width="1.5"/>
+    <text x="198" y="400" text-anchor="middle" fill="#e879f9" font-size="28" filter="url(#glow)">30+</text>
+    <text x="198" y="424" text-anchor="middle" fill="#9333ea" font-size="12">TAP POINTS</text>
+
+    <rect x="318" y="380" width="200" height="55" rx="6" fill="#1a0035" stroke="#7c3aed" stroke-width="1.5"/>
+    <text x="418" y="400" text-anchor="middle" fill="#c084fc" font-size="28" filter="url(#glow)">9</text>
+    <text x="418" y="424" text-anchor="middle" fill="#9333ea" font-size="12">BUS PROTOCOLS</text>
+
+    <rect x="538" y="380" width="200" height="55" rx="6" fill="#1a0035" stroke="#7c3aed" stroke-width="1.5"/>
+    <text x="638" y="400" text-anchor="middle" fill="#a855f7" font-size="28" filter="url(#glow)">20+</text>
+    <text x="638" y="424" text-anchor="middle" fill="#9333ea" font-size="12">SALVAGEABLE PARTS</text>
+  </g>
+
+  <!-- Protocol tags -->
+  <g font-family="monospace" font-size="11" fill="#7c3aed">
+    <rect x="98" y="455" width="55" height="22" rx="3" fill="#1a0035" stroke="#7c3aed" stroke-width="1"/>
+    <text x="125" y="470" text-anchor="middle" fill="#c084fc">I2C</text>
+    <rect x="162" y="455" width="55" height="22" rx="3" fill="#1a0035" stroke="#7c3aed" stroke-width="1"/>
+    <text x="189" y="470" text-anchor="middle" fill="#c084fc">SPI</text>
+    <rect x="226" y="455" width="55" height="22" rx="3" fill="#1a0035" stroke="#7c3aed" stroke-width="1"/>
+    <text x="253" y="470" text-anchor="middle" fill="#c084fc">UART</text>
+    <rect x="290" y="455" width="55" height="22" rx="3" fill="#1a0035" stroke="#7c3aed" stroke-width="1"/>
+    <text x="317" y="470" text-anchor="middle" fill="#c084fc">USB</text>
+    <rect x="354" y="455" width="55" height="22" rx="3" fill="#1a0035" stroke="#7c3aed" stroke-width="1"/>
+    <text x="381" y="470" text-anchor="middle" fill="#c084fc">PWM</text>
+    <rect x="418" y="455" width="55" height="22" rx="3" fill="#1a0035" stroke="#7c3aed" stroke-width="1"/>
+    <text x="445" y="470" text-anchor="middle" fill="#c084fc">ADC</text>
+    <rect x="482" y="455" width="55" height="22" rx="3" fill="#1a0035" stroke="#7c3aed" stroke-width="1"/>
+    <text x="509" y="470" text-anchor="middle" fill="#c084fc">PIO</text>
+  </g>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="580" width="1200" height="50" fill="#0d0025" opacity="0.9"/>
+  <line x1="0" y1="580" x2="1200" y2="580" stroke="#7c3aed" stroke-width="1" opacity="0.6"/>
+  <text x="30" y="611" font-family="monospace" font-size="13" fill="#6d28d9">github.com/thebardchat/pico-nerve-endings</text>
+  <text x="1170" y="611" text-anchor="end" font-family="monospace" font-size="13" fill="#6d28d9">Built by Shane + Claude Anthropic</text>
+</svg>
