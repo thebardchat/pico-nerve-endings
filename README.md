@@ -6,6 +6,12 @@
 
 # ⚡ pico-nerve-endings
 
+> **Try Claude free for 2 weeks** — the AI behind this entire ecosystem. [Start your free trial →](https://claude.ai/referral/4fAMYN9Ing)
+
+---
+
+
+
 **Raspberry Pi Pico 2 (RP2350) firmware and host scripts — the peripheral nervous system of ShaneBrain.**
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
