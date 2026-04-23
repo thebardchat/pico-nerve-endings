@@ -9,45 +9,24 @@ Usage: python3 tts_briefing.py [--port /dev/pico-audio] [--dry-run]
 """
 
 import argparse
-import json
 import struct
 import subprocess
 import sys
 import zlib
 from pathlib import Path
 
-# Adjust import path so we can pull from same directory
-sys.path.insert(0, str(Path(__file__).parent))
-from get_weather import get_weather
-from chaos_line import get_chaos_line, get_chaos_score
+sys.path.insert(0, "/mnt/shanebrain-raid/shanebrain-core/shanebrain-briefing")
+from briefing import build_briefing
 
 SERIAL_PORT   = "/dev/pico-audio"
 BAUD_RATE     = 115200
 WAV_RAW_PATH  = Path("/tmp/chaos_briefing_raw.wav")
 WAV_OUT_PATH  = Path("/tmp/chaos_briefing.wav")
 CHUNK_SIZE    = 4096
-PICO_DATA     = Path("/mnt/shanebrain-raid/mega-dashboard/pico-data.json")
 
 
 def build_briefing_text() -> str:
-    weather_summary, haul_risk = get_weather()
-    chaos_score = get_chaos_score()
-    chaos_line  = get_chaos_line()
-
-    try:
-        pico = json.loads(PICO_DATA.read_text())
-        temp_f    = pico.get("temp_f", "unknown")
-        pi_status = f"desk temperature {temp_f} degrees"
-    except Exception:
-        pi_status = "systems nominal"
-
-    return (
-        f"Good morning Shane. Morning Chaos Briefing. "
-        f"Weather: {weather_summary}. Haul risk: {haul_risk}. "
-        f"ShaneBrain status: {pi_status}. "
-        f"Chaos score: {chaos_score} out of 10. "
-        f"{chaos_line}"
-    )
+    return build_briefing()
 
 
 def generate_wav(text: str) -> None:
@@ -97,6 +76,7 @@ def main():
     parser = argparse.ArgumentParser(description="Morning Chaos Briefing TTS")
     parser.add_argument("--port",     default=SERIAL_PORT, help="Serial port for Pico 2")
     parser.add_argument("--dry-run",  action="store_true",  help="Generate WAV only, no serial send")
+    parser.add_argument("--local",    action="store_true",  help="Play via local audio (aplay) instead of Pico 2")
     parser.add_argument("--text",     default=None,         help="Override briefing text")
     args = parser.parse_args()
 
@@ -108,8 +88,11 @@ def main():
     print(f"[tts] WAV ready: {WAV_OUT_PATH.stat().st_size} bytes")
 
     if args.dry_run:
-        print(f"[tts] Dry run — WAV at {WAV_OUT_PATH}, skipping serial send")
-        print("[tts] To play locally: aplay /tmp/chaos_briefing.wav")
+        print(f"[tts] Dry run — WAV at {WAV_OUT_PATH}, skipping playback")
+        return
+
+    if args.local:
+        subprocess.run(["aplay", str(WAV_OUT_PATH)], check=True)
         return
 
     success = stream_wav(args.port)
